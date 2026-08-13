@@ -1,0 +1,225 @@
+---
+title: "IDR4000: Hjemmelekse uke 49"
+format:
+  typst:
+    columns: 1
+editor_options: 
+  chunk_output_type: console
+---
+
+
+Forbered deg på å diskutere spørsmålene under i timen i uke 49.
+
+For problem 1-5 bruk datasettet `strengthvolume`.
+
+1. Bruk følgende data:
+      - `exercise == "isok.60"` (exercise skal være "isok.60")
+      - `time %in% c("pre", "post")` (tidspunkt "pre" og "post")
+      - `include == "incl"` (bare deltakere som ble inkludert i analysene)
+ 
+ I R kan det være lurt å spesifisere rekkefølge i variablene:
+ 
+ 
+```{r}
+#| echo: true
+#| eval: false
+
+library(exscidata)
+library(tidyverse)
+
+dat <- strengthvolume |> 
+       filter(time %in% c("pre", "post"), 
+              exercise == "isok.60", 
+              include == "incl") |> 
+       mutate(time = factor(time, levels = c("pre", "post")), 
+              sets = factor(sets, levels = c("single", "multiple"))) 
+
+summary(lmer(load ~ time * sets + (1 | participant), data = dat))
+
+
+```
+ 
+I Jasp kan du oppdatere `Value` i variablene under edit data.
+ 
+Lag en mixed model etter denne beskrivelsen:
+ 
+$$
+\begin{align}
+y_{ij} &\sim \operatorname{Normal}(\mu_{ij}, \sigma) \\
+\mu_{ij} &= \beta_0 + \beta_1\text{Time}_i + \beta_2\text{Sets}_i + \beta_3(\text{Time}_i \times \text{Sets}_i) + b_{0[j]}
+\end{align}
+$$
+Hvor *i* indekserer rad i datasettet (*i* for 1, 2, 3, ... k obsevasjoner) og *j* indekserer deltakere (*j* for 1 ,2 , 3, ... n deltakere).
+
+> Spørsmål:
+> 
+> a. Hva er din konklusjon angående effekten av treningsvolum (*Sets*) over tid?
+> b. Hva er betydelsen av $b_{0[j]}$ i modellen?
+
+
+2. Bruk den samme dataen men omstrukturere den. Først, lag en en ny variable for `change = post - pre`. Datasettet kan nå se ut slik (de første 6 radene):
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+
+library(exscidata)
+library(tidyverse)
+library(gt)
+
+strengthvolume |> 
+       filter(time %in% c("pre", "post"), 
+              exercise == "isok.60", 
+              include == "incl") |> 
+       mutate(time = factor(time, levels = c("pre", "post")), 
+              sets = factor(sets, levels = c("single", "multiple")))  |> 
+      select(participant, time, sets, load) |> 
+      pivot_wider(names_from = time, 
+                  values_from = load) |> 
+      mutate(change = post - pre) |> 
+      head() |> 
+      gt()
+
+
+```
+
+
+Bruk `change` vaiabelen videre. Beregne en differens mellom forandring over tid i hver treningsvolum for hvert deltaker. Det siste datasettet bør se ut slik:
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+library(exscidata)
+library(tidyverse)
+library(gt)
+
+dat <- strengthvolume |> 
+       filter(time %in% c("pre", "post"), 
+              exercise == "isok.60", 
+              include == "incl") |> 
+       mutate(time = factor(time, levels = c("pre", "post")), 
+              sets = factor(sets, levels = c("single", "multiple")))  |> 
+      select(participant, time, sets, load) |> 
+      pivot_wider(names_from = time, 
+                  values_from = load) |> 
+      mutate(change = post - pre) |> 
+      dplyr::select(-post, -pre) |> 
+      pivot_wider(names_from = sets, 
+                  values_from = change) |> 
+      mutate(diff = multiple - single)
+
+dat |> 
+      head() |> 
+      gt() 
+
+
+```
+
+
+Lag en modell som beskriver:
+
+$$
+\begin{align}
+y &\sim \operatorname{Normal}(\mu, \sigma) \\
+\mu &= \beta_0
+\end{align}
+$$
+Hvor $y = (\text{post}_\text{multiple} - \text{pre}_\text{multiple}) - (\text{post}_\text{single} - \text{pre}_\text{single})$
+
+
+> Spørsmål:
+>
+> a. Hva er din konklusjon angående effekten av treningsvolum (*Sets*) over tid?
+> b. Beskriv likhetene mellom de to modellene.
+
+
+3. Bruk en simulering for å vise at *z* som konfunderende effekt påvirker estimeringen av den kausale effekten mellom *x* og *y* (se @fig-dag).
+
+```{r}
+#| label: fig-dag
+#| echo: false
+#| message: false
+#| fig-cap: "En Directed Acyclic Graph"
+
+library(ggtext)
+library(cowplot)
+library(ggdag)
+
+des_coords <-
+  tibble(name = c("X", "Y", "Z", "D"),
+         x    = c(1, 3, 2, 2),
+         y    = c(1, 1, 2, 1.2))
+
+des_dag <-
+  dagify(Y ~ Z,
+         X ~ Z,
+         D ~ Z,
+         coords = des_coords)
+
+
+
+des <- des_dag %>%
+  tidy_dagitty() %>%
+
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_point(alpha = 1, size = 12, color = "white") +
+  geom_dag_text(color = "black") +
+  geom_dag_edges() + 
+  theme_dag() + 
+    scale_y_continuous(limits = c(0.9, 2.2)) +
+
+  labs() +
+    theme(plot.title = element_markdown()) 
+
+
+
+des
+
+
+```
+
+
+Her kan du bruke bruke følgende kode for å lage variabler (i Jasp og R)
+
+```{r}
+#| echo: true
+#| eval: false
+
+
+# Z
+rnorm(100, 0, 1)
+# I R, spare variablene i objekter, eks.
+# z <- rnorm(100, 0, 1)
+
+# x
+rnorm(100, z, 0.2)
+
+# y 
+rnorm(100, - z, 0.2)
+
+# d 
+rnorm(100, z, 0.1)
+
+```
+
+Hvis du bruker Jasp, husk at du må endre antall rader i datasettet ("Resize Data" under "Edit Data").
+
+Endre variasjonen i sammenhengene ved å endre parameteren for standardavvik. Funksjonen `rnorm` er parameterisert som `rnorm(`*ANTALL*, *GJENNOMSNITT*, *STANDARDAVVIK*`)`.
+
+
+4. Hva skjer med det kausale estimatet *x* &rarr; *y* når du bruker variabelen D (se @fig-dag) for å kontrollere for konfunderende effekter?
+
+
+::: {.block fill="luma(230)" inset="8pt" radius="4pt"}
+
+*Hvorfor skjer dette?* La oss si at D er den variabelen vi faktisk har måler. Når vi bruker denne så finnes bare en begrenset del av *Z* representert i *D* når denne variabelen også inneholder støy. I din simulering bør du ha mulighet å se effekten av dette når du prøver å kontrollere for den konfunderende variabelen. 
+
+:::
+
+
+5. I hvilke situasjoner kan innsikten fra spørsmål 4 bli relevant? 
+

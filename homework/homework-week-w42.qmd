@@ -1,0 +1,88 @@
+---
+title: "IDR4000: Hjemmelekse uke 42"
+format:
+  typst:
+    columns: 1
+---
+
+
+Forbered deg på å diskutere spørsmålene under i timen i uke 42.
+
+**Fra tidligere hjemmelekse:**
+
+14. Bruk datasettet `strengthvolume` og lag en graf over maksimalstyrke ved tidspunktene `session1` og `post. Bruk en øverlse (exercise) og differensiere mellom treningsvolum (sets)
+15. Bruk datasettet `strengthvolume` og lag en graf som beskriver forhold mellom bevegelshastighet og styrke. Bevegelshastighet finnes i variabelen exercise, hvor isom er isometrisk styrke (0 grader/sek), isok.60, isok.120 og isok.240 er isokinetisk styrke ved 60, 120 og 240 grader per sekund. Undersøk om vi visuelt kan forskjell mellom i forhold mellom hastighet og kraft per tidspunkt og kjønn. Her kan man bruke en statistisk modell, for eksempel i JASPs Plot Builder, eller ved å bruke `geom_smooth` i `ggplot2`. Her må variablene forandres for å lage en kontinuerlig variabel som beskriver hastighet fra den kategoriske dataen i exercise.
+16. Bruk datasettet millward for å visualisere fordelingen av variabelene RNA og protein synthesis. Hvordan er variablene fordelt, hvordan kan vi beskrive fordelingene? Gjør det samme med valgfri data fra strengthvolume. 
+
+
+**Nye oppgaver:**
+
+1. Korrelasjonen mellom to variabler er r = 0.02, hva forteller estimatet?
+2. To variabler korrelerer (r = 0.78), hva forteller estimatet?
+3. I en regresjonsmodell (se under) er estimatet for $\beta_1$ 0.78, hva forteller deg estimatet?
+
+$$
+\begin{align}
+y &\sim \operatorname{Normal}(\mu, \sigma) \\
+\mu &= \beta_0 + \beta_1x
+\end{align}
+$$
+4. Hva er gjennomsnittet i $y$ når $x=25$ gitt dataene i tabellen under og modellen som beskrevet over (bruk R eller JASP til å lage en regresjonsmodell):
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(gt)
+
+x <- runif(16, min = 10, max = 48)
+y <- 15.6 + 0.78 * x + rnorm(16, 0, 23)
+
+data.frame(y, x) |> 
+gt()
+
+
+
+
+
+```
+
+
+
+5. I modellen over, hva er differensen i utfallet ($y$) når $x$ øker fra 20 til 30? Hvordan relaterer denne forskjellen til stigningstallet i modellen?
+
+6. Forklar forskjellen mellom å måle assosiasjonen mellom $x$ og $y$ med en regresjonsmodell og med en korrelasjonskoeffisient.
+
+7. Bruk datasettet cyclingstudy, lag en modell som beskriver hvordan høyde (`height.T1`) påvirker gjennomsnitt i VO~2maks~ (`VO2.max`).
+
+8. Lag en beskrivelse av modellen i forrige oppgave som inneholder antagelser om fordeling av den avhengige variabelen og forholdet mellom uavhengig varaibel og gjennomsnitt i utfallsvariabelen.
+9. Lag en figur som beskriver sammenhengen mellom variablene i modellen over og en figur som beskriver residualene i forhold til «Predicted values», hva forteller figurene deg?   
+
+
+
+
+5. I modellen over, hva er differensen i utfallet ($y$) når $x$ øker fra 20 til 30? Hvordan relaterer denne forskjellen til stigningstallet i modellen?
+
+6. Forklar forskjellen mellom å måle assosiasjonen mellom $x$ og $y$ med en regresjonsanalyse og med en korrelasjonskoeffisient.
+
+7. Bruk datasettet cyclingstudy, lag en modell som beskriver hvordan høyde  (`height.T1`) påvirker gjennomsnitt i VO~2maks~ (`VO2.max`).
+
+8. Lag en beskrivelse av modellen i forrige oppgave som inneholder antagelser on fordeling av den avhengige varaibelen og forholdet mellom kovariaten og gjennomsnitt i utfallsvariabelen.   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

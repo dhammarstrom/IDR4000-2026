@@ -1,0 +1,167 @@
+---
+title: "IDR4000: Hjemmelekse uke 51"
+format:
+  typst:
+    bibliography-title: "Litteratur"
+    columns: 1
+editor_options: 
+  chunk_output_type: console
+bibliography: bib.bib
+---
+
+Forbered deg på å diskutere spørsmålene i timen i uke 50. Lesetips er Spiegelhalter [@spiegelhalter2019] kap. 11 og eks. Frigessi m.fl. [@frigessi2018] kap. 14.
+
+::: {.block fill="luma(230)" inset="8pt" radius="4pt"}
+
+Vi har utviklet at dopingtest som detekterer Probenecid, et stoff som kan brukes for å skjule doping. Testet har en sensitivitet på 99%, hvis vi faktisk har 100 prøver som vi vet er positive vil testen vise positivt i 99 prøver. Testet har en falsk positive rate på 3%, bland 100 prøver hvor vi vet at stoffet ikke finnes sier testen at 3 prøver er positive.
+Basert på anonyme undersøkelser blant utøvere tror vi bare 0.1% bruker stoffet.   
+
+:::
+
+
+1. En test kommer tilbake fra dopinglaboratoriet, hva er sannsynligheten for at den positive prøven er fra en person som faktisk har tatt stoffet? Bruk diagrammet under for å beregne sannsynligheten.
+
+```{=typst}
+
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+
+#import fletcher.shapes: diamond
+#set text(weight: 400) // testing: omit
+
+#diagram(
+	node-stroke: 1pt,
+	node((1,0), [10000], corner-radius: 1pt),
+	edge((1,0), (0,1), "-|>", [Doping]),  // Start to next1
+	edge((1,0), (2,1), "-|>", [No doping]),  // Start to next2
+	node((0,1), [n], corner-radius: 2pt),
+	node((2,1), [n], corner-radius: 2pt),
+	edge((0,1), (0,2), "-|>", [Positive], label-pos: 0.3),
+	edge((0,1), (1,2), "-|>", [Negative], label-pos: 0.3),
+      edge((2,1), (2,2), "-|>", [Positive], label-pos: 0.3),
+	edge((2,1), (3,2), "-|>", [Negative], label-pos: 0.3),
+	node((0,2), [n], corner-radius: 2pt),
+	node((1,2), [n], corner-radius: 2pt),
+	node((2,2), [n], corner-radius: 2pt),
+	node((3,2), [n], corner-radius: 2pt), 
+	
+      node((4,0.5), [Doping], corner-radius: 0pt, stroke: none, fill: yellow),
+      node((4,1.5), [Test result], corner-radius: 0pt, stroke: none, fill: yellow),
+	
+)
+
+
+```
+
+
+
+2. Bruk Bayes lov for å beregne sannsynligheten for doping ($D$) ved et positivt dopingtest ($T+$; $p(D|T^+)$) .
+
+
+$$
+P(D|T^+) = \frac{P(T^+|D) \times P(D)}{P(T^+)}
+$$
+
+
+::: {.block fill="luma(230)" inset="8pt" radius="4pt"}
+
+Du beregner en p-verdi i din studie. Hvis vi bruker $p < 0.05$ som bevis for at hypotesen $H$ er riktig, hva er sannsynligheten for at $H$ faktisk er riktig. La oss si at 1% av forskeres hypoteser er riktige og at studier i gjennomsnitt er designet for å finne riktige hypoteser, om de finnes, i 80% av tilfellene.
+
+:::
+
+3. Hva er $p(H|p<0.05)$?
+
+
+
+```{r}
+#| echo: false
+
+doping <- 0.1
+false_positives <- 0.03
+false_negatives <- 0.01
+
+# P(d|t+) = p(t+|d) * p(d) / p(t+)
+d_t <- ( (1-false_negatives) * doping ) /  ((1-false_negatives) * doping + false_positives * (1-doping))
+
+```
+
+
+
+```{r}
+#| echo: false
+
+
+# Scientific hypotheses
+
+# What is the probability of the alternative hypothesis given p < 0.05
+
+# Prior information
+
+# How many true hypotheses? 
+true_hyp  <- 0.01
+false_pos <- 0.05
+false_neg <- 0.20 # Power = 1 - false_neg
+
+h_p <- ( (1-false_neg) * true_hyp ) / ( ( 1-false_neg) * true_hyp + false_pos * (1-true_hyp))
+
+
+
+
+```
+
+
+
+4. Du gjennomfører en t-test og får resultat under. Hvordan kan vi på best måte presentere resultatene? Les gjerne [@altman1996] for inspirasjon.
+
+
+```{r}
+#| echo: false
+
+set.seed(2)
+heat <- rnorm(10, 895, 95)
+con <- rnorm(10, 995, 95)
+
+t.test(heat, con)
+
+```
+
+
+5. I datasettet `exscidata::hbmass` finner vi data fra en studie hvor Hb~masse~ har blitt målt i forkant og etter en varmetreningsintervensjon. Lag en modell over som beskriver forskjell i forandringsskårer ($y = \text{post} - \text{pre}$, se modellbeskrivelse under modell -@eq-change; du finner også datasettet på canvas). Hva er din konklusjon om forskjellen mellom kontroll og eksperimentell gruppe? 
+
+
+$$
+y \sim \operatorname{Normal}(\beta_0 + \beta_1x_\text{gruppe}, \sigma)
+$$ {#eq-change}
+
+6. Bruk det samme datasettet som i oppgave 5 men lag en modell som beskriver forskjell i post-verdier ($y = \text{Hb}_\text{mass[post]}$) mellom gruppene (modell -@eq-post-only). Hva er din konklusjon om forskjellen mellom kontroll og eksperimentell gruppe? 
+
+$$
+y \sim \operatorname{Normal}(\beta_0 + \beta_1x_\text{gruppe}, \sigma)
+$$ {#eq-post-only}
+
+7. Bruk det samme datasettet som i oppgave 5 men lag en modell som beskriver forskjell i post-verdier ($y = \text{Hb}_\text{mass[post]}$) mellom gruppene når vi kontrollerer for pre-verdier (modell -@eq-ancova). Hva er din konklusjon om forskjellen mellom kontroll og eksperimentell gruppe? 
+
+$$
+\begin{align}
+y &\sim \operatorname{Normal}(\mu, \sigma) \\
+\mu &= \beta_0 + \beta_1x_\text{pre} +\beta_2x_\text{gruppe}
+\end{align}
+$$ {#eq-ancova}
+
+8. Hvilke er forskjellene mellom modellene 1-3? 
+
+9. Velg resultatene fra en modell, den modell du syns best fanger studiedesignet, og rapporter resultatene.
+
+::: {.block fill="luma(230)" inset="8pt" radius="4pt"}
+
+I eksemplene over bruker vi differenser for å beregne forandringsskårer. I noen fall kan prosent endring ha et pedagogisk poeng. Det viser seg at denne forandringsskåren ikke lemper seg for statistisk analyse [@vickers2001]. Se Vickers [@vickers2001] for mer bakgrunn om ANCOVA og hvordan man kan rapportere prosent endring i tillegg til resultatene fra analyse av ikke transformerte data. 
+
+:::
+
+
+
+::: {#refs}
+:::
+
+
+
+

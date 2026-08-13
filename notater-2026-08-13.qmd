@@ -1,0 +1,118 @@
+---
+title: "Notes 2026-08-13"
+format: typst
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Visualizations
+
+### Scatter plots
+
+```{r}
+
+
+library(tidyverse)
+library(exscidata)
+
+ggplot(data = exscidata::millward, 
+         aes(x = RNA, 
+             y = protein_synthesis))  +
+  geom_point()
+
+
+```
+
+### Histogram and density
+
+```{r}
+
+ggplot(data = exscidata::millward, 
+       aes(x = protein_synthesis)) + 
+  geom_histogram()
+
+
+
+```
+
+```{r}
+
+ggplot(data = exscidata::millward, 
+       aes(x = protein_synthesis)) + 
+  geom_density()
+
+
+
+```
+
+### Boxplots
+
+```{r}
+
+
+
+ggplot(data = exscidata::millward, 
+       aes(x = group, 
+           y = protein_synthesis)) + 
+  geom_boxplot() 
+
+
+
+```
+
+
+## Summaries
+
+```{r}
+
+exscidata::millward |>
+  summarise(.by = group, 
+          gjennomsnitt = mean(protein_synthesis), 
+          standardavvik = sd(protein_synthesis), 
+          varians = var(protein_synthesis), 
+          median = median(protein_synthesis)) |> 
+  print()
+  
+
+
+
+```
+
+
+
+### Helicopter
+
+```{r}
+
+dat <- readxl::read_excel("data/helikopter.xlsx", 
+                          sheet = 2)
+
+
+dat |> 
+  ggplot(aes(id, time)) + geom_boxplot()
+
+
+dat |> 
+  summarise(.by = id, 
+            m = mean(time), 
+            s = sd(time)) |> 
+  print()
+
+
+
+dat |> 
+  ggplot(aes(id, time)) + geom_boxplot()
+
+dat |> 
+  ggplot(aes(time)) + geom_histogram() + 
+  facet_wrap(~ id)
+
+```
+
+
+
+
+
+
