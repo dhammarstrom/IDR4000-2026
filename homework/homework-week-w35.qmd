@@ -2,11 +2,18 @@
 title: "IDR4000: Hjemmelekse uke 35"
 format:
   typst:
-    columns: 1
+    include-in-header:
+        - text: |
+            /* Color links */
+            #show link: set text(fill: rgb(0, 0, 255))
 ---
 
-Forbered deg på å diskutere spørsmålene under i timen i uke 35.
+- Husk [emnenotater](https://dhammarstrom.github.io/quant-methods), og øvrig pensum, f.eks. relevante deler i Spiegelhalter.
+- De som ønsker å følge anbefalingen å bruke R finner læringsressurser for dette her: [dhammarstrom.github.io/r-crash-course](https://dhammarstrom.github.io/r-crash-course)
+- [Her](https://www.youtube.com/@davidpillow8987/videos) finner dere en serie med videoer som beskriver JASP (inkludert plot builder). Søk deg frem til "Lesson 1".
+- Datasettene finnes i exscidata-pakken (R) og på websiden til [emnenotatene](https://dhammarstrom.github.io/quant-methods/). 
 
+**Forbered deg på å diskutere spørsmålene under i timen i uke 35.**
 
 1. En variabel har blitt målt i laboratoriet, laveste mulige resultat er 0, avstanden mellom 1 og 2 er det samme som mellom 3 og 4. Hva kaller vi variabelen?
 2. En variabel som kan brukes for å skille to kategorier uten naturlig rekkefølge kalles?
@@ -32,7 +39,4 @@ Forbered deg på å diskutere spørsmålene under i timen i uke 35.
 18. Bruk datasettet`strengthvolume` og lag en graf som beskriver forhold mellom bevegelshastighet og styrke. Bevegelshastighet finnes i variabelen exercise, hvor isom er isometrisk styrke (0 grader/sek), isok.60, isok.120 og isok.240 er isokinetisk styrke ved 60, 120 og 240 grader per sekund. Undersøk om vi visuelt kan forskjell mellom i forhold mellom hastighet og kraft per tidspunkt og kjønn. Her kan man bruke en statistisk modell, for eksempel i JASPs Plot Builder, eller ved å bruke `geom_smooth`i `ggplot2`. Her må variablene forandres for å lage en kontinuerlig variabel som beskriver hastighet fra den kategoriske dataen i exercise.
 19. Bruk datasettet millward for å visualisere fordelingen av variabelene RNA og protein synthesis. Hvordan er variablene fordelt, hvordan kan vi beskrive fordelingene? Gjør det samme med valgfri data fra strengthvolume. 
 
-## Læringsressurser, utover pensum:
 
-- [Her](https://www.youtube.com/@davidpillow8987/videos) finner dere en serie med videoer som beskriver JASP (inkludert plot builder). Søk deg frem til "Lesson 1".
-- Datasettene finnes i exscidata-pakken (R) og på websiden til [emnenotatene](https://dhammarstrom.github.io/quant-methods/). 
