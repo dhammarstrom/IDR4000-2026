@@ -1,0 +1,75 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+ 
+ 
+For å installere `exscidata`:
+
+- Vi trenger `remotes`
+- Vi installerer `exscidata` fra github:
+
+```{r}
+#| eval: false
+#| echo: true
+#| message: false
+
+library(remotes)
+install_github("dhammarstrom/exscidata")
+
+```
+
+
+16. Bruk datasettet strengthvolume, sammenstill gjennomsnitt og standardavvik for maksimal styrke i legext og legpress for hvert tidspunkt, sets og sex.
+
+```{r}
+
+library(exscidata)
+library(tidyverse)
+
+
+
+# Ta strengthvolume datasettet
+strengthvolume |> 
+  # filter på tid, bruk session1 og post
+  filter(time %in% c("session1", "post")) |> 
+  # filter kun bruk legpress og legext
+  filter(exercise %in% c("legpress", "legext")) |>
+  # Summer på tid, exercise, sets
+  summarise(
+    .by = c(time, exercise, sets),
+    m = mean(load, na.rm = TRUE),
+    s = sd(load, na.rm = TRUE), 
+    min = min(load, na.rm = TRUE), 
+    max = max(load, na.rm = TRUE), 
+    q25 = quantile(load, 0.25, na.rm = TRUE), 
+    med = median(load, na.rm = TRUE), 
+    q75 = quantile(load, 0.75, na.rm = TRUE)
+  ) |>
+  
+  mutate(time = factor(time, levels = c("session1", "post"))) |> 
+  
+  ggplot(aes(x = time, y = m, 
+             color = sets, 
+             shape = exercise,
+             group = paste(exercise, sets))) + 
+  geom_line() + 
+  geom_point() 
+  
+  
+  
+  
+
+  
+
+
+```
+
+
+strengthvolume
+
+
+
