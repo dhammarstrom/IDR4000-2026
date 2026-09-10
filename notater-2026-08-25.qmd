@@ -60,16 +60,28 @@ strengthvolume |>
   geom_point() 
   
   
-  
-  
-
-  
-
 
 ```
 
 
-strengthvolume
 
+
+
+```{r}
+
+
+library(exscidata)
+library(tidyverse)
+
+
+millward |> 
+  ggplot(aes(RNA, protein_synthesis)) + geom_point()
+  
+
+
+
+
+
+```
 
 

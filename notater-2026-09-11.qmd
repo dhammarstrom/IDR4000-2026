@@ -1,0 +1,195 @@
+---
+title: "Notater 2026-09-10"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+
+16. Bruk datasettet millward for å visualisere fordelingen av variabelene RNA og protein synthesis. Hvordan er variablene fordelt, hvordan kan vi beskrive fordelingene? 
+
+
+> En fordeling gir os et bilde over hvordan data fordeles over en (eller flere) aksel.
+
+> Eksempel på fordeling
+
+```{r}
+
+library(tidyverse)
+library(exscidata)
+
+ggplot(data = millward, 
+       aes(x = protein_synthesis)) + 
+  geom_histogram()
+
+```
+
+
+1. Korrelasjonen mellom to variabler er r = 0.02, hva forteller estimatet?
+
+> Dette er en svak (ingen) korrelasjon
+
+2. To variabler korrelerer (r = 0.78), hva forteller estimatet?
+
+> Dette tyder på en sammenheng mellom variablene.
+
+3. I en regresjonsmodell (se @eq-m1) er estimatet for $\beta_1$ 0.78, hva forteller deg estimatet?
+
+$$
+\begin{align}
+y_i &\sim \operatorname{Normal}(\mu_i, \sigma) \\
+\mu_i &= \beta_0 + \beta_1x_i
+\end{align}
+$$ {#eq-m1}
+
+4. Beskriv modelldefinisjonen over (@eq-m1) med ord, hva forteller den?
+
+
+
+5. Hva er gjennomsnittet i $y$ når $x=25$ gitt dataene i tabellen under og modellen som beskrevet over (@eq-m1)? Bruk R eller JASP til å lage en regresjonsmodell.
+
+
+```{r}
+
+dat <- data.frame(
+  y = c(-8.82, 38.908 ,80.154 ,31.102 ,54.641 ,39.083 ,45.474 ,26.904 ,58.738 ,43.382,41.67  ,
+         -14.743,57.959 ,5.583  ,14.655 ,59.959), 
+  x = c(16.638,10.099,46.543,26.373,43.28,26.031,
+        12.709,26.54,41.455,24.315, 12.398,12.689,34.685, 32.404,36.611,34.222))
+
+
+
+m <- lm(y ~ x, 
+        data = dat)
+
+b0 <- coef(m)[1]
+b1 <- coef(m)[2]
+
+y_pred <- b0 + b1 * 25
+
+y_pred
+
+```
+
+
+
+6. I modellen over, hva er differensen i utfallet ($y$) når $x$ øker fra 20 til 30? Hvordan relaterer denne forskjellen til stigningstallet i modellen?
+
+
+
+```{r}
+
+ggplot(data = dat, 
+       aes(x = x, y = y)) + 
+  geom_point() + 
+  
+  geom_smooth(method = "lm", 
+              se = FALSE)
+  
+  
+y_x20 <- b0 + b1 * 20 
+y_x30 <- b0 + b1 * 30
+
+diff <- y_x30 - y_x20
+
+diff <- b1 * 10
+
+```
+
+
+7. Forklar forskjellen mellom å måle assosiasjonen mellom $x$ og $y$ med en regresjonsmodell og med en korrelasjonskoeffisient.
+
+
+> Regresjonsmodellen inneholder mer informasjon (hva påviker hva)
+
+> Korrelasjon måler sammenheng
+
+
+```{r}
+
+cor(dat$x, dat$y)
+cor(dat$y, dat$x)
+
+coef(lm(y ~ x, data = dat))
+coef(lm(x ~ y, data = dat))
+
+```
+
+
+
+8. Bruk datasettet cyclingstudy, lag en modell som beskriver hvordan høyde (`height.T1`) påvirker gjennomsnitt i VO~2maks~ (`VO2.max`).
+
+
+```{r}
+
+cycdat <- cyclingstudy |> 
+  
+  filter(timepoint == "pre") |> 
+  select(subject, height.T1, VO2.max) |> 
+  print()
+
+```
+
+
+$$
+\begin{align}
+\text{VO}_{2\text{max}[i]} \sim \operatorname{Normal}(\mu_i, \sigma) \\
+\mu_i = \beta_0 + \beta_1 \times \text{Height}_i
+\end{align}
+$$
+
+```{r}
+
+m <- lm(VO2.max ~ height.T1, 
+        data = cycdat)
+
+
+ggplot(data = cycdat, 
+       aes(height.T1, VO2.max)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", 
+              se = FALSE)
+
+summary(m)
+
+```
+
+
+
+
+9. Lag en beskrivelse av modellen i forrige oppgave som inneholder antagelser om fordeling av den avhengige variabelen og forholdet mellom uavhengig varaibel og gjennomsnitt i utfallsvariabelen.
+
+10. Lag en figur som beskriver sammenhengen mellom variablene i modellen over og en figur som beskriver residualene i forhold til «Predicted values», hva forteller figurene deg? 
+
+
+```{r}
+
+b0 <- coef(m)[1]
+b1 <- coef(m)[2]
+
+# Prediksjoner for hver observasjon
+pred <- b0 + b1 * cycdat$height.T1
+
+# Residualer for hver observasjon
+resid <- cycdat$VO2.max - pred
+
+# Figur prediksjon residual
+
+cycdat <- cycdat |> 
+  mutate(predict = pred, 
+         residual = resid) |> 
+  print()
+
+
+ggplot(data = cycdat, 
+       aes(predict, residual)) + geom_point()
+
+
+
+```
+
+
+
+
+

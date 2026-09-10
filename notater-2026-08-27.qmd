@@ -1,0 +1,73 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+bibliography: references.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+
+
+```{r}
+
+
+library(exscidata)
+library(tidyverse)
+
+
+p1 <- millward |> 
+  ggplot(aes(RNA, protein_synthesis)) + 
+  geom_point() +
+  geom_smooth(method = "lm", 
+              se = FALSE) +
+  geom_abline(intercept = 0.004952, 
+              slope = 0.010498, 
+              color = "darkorange", 
+              lty = 2)
+  
+
+# Lage en statistisk modell 
+
+m <- lm(protein_synthesis ~ RNA, 
+        data = millward)
+ 
+
+# Beregne en korrelasjon
+mc <- cor(millward$protein_synthesis, 
+          millward$RNA)
+
+
+# Residualer
+
+# Lagre modellens koeffisienter
+int <- coef(m)[1]
+slope <- coef(m)[2]
+
+p2 <- millward |> 
+  # Beregne prediksjoner
+  mutate(pred = int + slope * RNA, 
+         resid = protein_synthesis - pred) |> 
+  ggplot(aes(RNA, resid)) + geom_point() + 
+  geom_hline(yintercept = 0)
+
+
+
+cowplot::plot_grid(p1, p2, 
+                   ncol = 1)
+
+
+
+```
+
+
+$$y_i = \beta_0 + \beta_1 \times \text{RNA}_i$$
+
+
+
+
+
+
+

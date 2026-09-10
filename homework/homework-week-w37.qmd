@@ -1,0 +1,96 @@
+---
+title: Hjemmelekse uke 37
+typst-logo:
+  path: "logo-eng.png"
+course: "IDR4000"
+course-link: "https://dhammarstrom.github.io/quant-methods"
+page-numbering: "none"  # Options: "1", "I", "i", "a", "A", or "none" to disable
+margin-notes:
+  - title: "Emneansvar"
+    position: 20
+    content: "[Daniel Hammarström](mailto:daniel.hammarstrom@inn.no)"
+  - title: "Emnenotater"
+    position: 10
+    content: "[dhammarstrom.github.io/quant-methods/](https://dhammarstrom.github.io/quant-methods/)"
+  - title: ""
+    position: 15
+    content: ""
+format:
+  innHandout-typst: default
+bibliography: bibliography.bib
+bibliographystyle: "apa"
+reference-section-title: false     # disables Quarto's automatic bibliography heading
+bibliography-heading: "" # our own heading for the bibliography
+crossref:
+  fig-title: Figur    # (default is "Figure")
+  tbl-title: Tabell     # (default is "Table")
+  title-delim: ":"     # (default is ":")
+---
+
+Forbered deg på å diskutere spørsmålene under i timen i uke 37.
+
+**Fra tidligere hjemmelekse:**
+
+14. Bruk datasettet `strengthvolume` og lag en graf over maksimalstyrke ved tidspunktene `session1` og `post. Bruk en øvelse (exercise) og differensiere mellom treningsvolum (sets)
+15. Bruk datasettet `strengthvolume` og lag en graf som beskriver forhold mellom bevegelshastighet og styrke. Bevegelshastighet finnes i variabelen exercise, hvor isom er isometrisk styrke (0 grader/sek), isok.60, isok.120 og isok.240 er isokinetisk styrke ved 60, 120 og 240 grader per sekund. Undersøk om vi visuelt kan forskjell mellom i forhold mellom hastighet og kraft per tidspunkt og kjønn. Her kan man bruke en statistisk modell, for eksempel i JASPs Plot Builder, eller ved å bruke `geom_smooth` i `ggplot2`. Her må variablene forandres for å lage en kontinuerlig variabel som beskriver hastighet fra den kategoriske dataen i exercise.
+16. Bruk datasettet millward for å visualisere fordelingen av variabelene RNA og protein synthesis. Hvordan er variablene fordelt, hvordan kan vi beskrive fordelingene? Gjør det samme med valgfri data fra strengthvolume. 
+
+
+**Nye oppgaver:**
+
+1. Korrelasjonen mellom to variabler er r = 0.02, hva forteller estimatet?
+2. To variabler korrelerer (r = 0.78), hva forteller estimatet?
+3. I en regresjonsmodell (se @eq-m1) er estimatet for $\beta_1$ 0.78, hva forteller deg estimatet?
+
+$$
+\begin{align}
+y_i &\sim \operatorname{Normal}(\mu_i, \sigma) \\
+\mu_i &= \beta_0 + \beta_1x_i
+\end{align}
+$$ {#eq-m1}
+
+4. Beskriv modelldefinisjonen over (@eq-m1) med ord, hva forteller den?
+
+5. Hva er gjennomsnittet i $y$ når $x=25$ gitt dataene i tabellen under og modellen som beskrevet over (@eq-m1)? Bruk R eller JASP til å lage en regresjonsmodell.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(gt)
+
+x <- runif(16, min = 10, max = 48)
+y <- 15.6 + 0.78 * x + rnorm(16, 0, 23)
+
+data.frame(y, x) |> 
+  gt() |> 
+  tab_options(table.font.size = 8) |> 
+  fmt_auto()
+  
+
+
+
+
+
+```
+
+
+
+6. I modellen over, hva er differensen i utfallet ($y$) når $x$ øker fra 20 til 30? Hvordan relaterer denne forskjellen til stigningstallet i modellen?
+
+7. Forklar forskjellen mellom å måle assosiasjonen mellom $x$ og $y$ med en regresjonsmodell og med en korrelasjonskoeffisient.
+
+8. Bruk datasettet cyclingstudy, lag en modell som beskriver hvordan høyde (`height.T1`) påvirker gjennomsnitt i VO~2maks~ (`VO2.max`).
+
+9. Lag en beskrivelse av modellen i forrige oppgave som inneholder antagelser om fordeling av den avhengige variabelen og forholdet mellom uavhengig varaibel og gjennomsnitt i utfallsvariabelen.
+
+10. Lag en figur som beskriver sammenhengen mellom variablene i modellen over og en figur som beskriver residualene i forhold til «Predicted values», hva forteller figurene deg?   
+
+
+
+
+
+
