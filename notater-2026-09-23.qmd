@@ -1,0 +1,198 @@
+---
+title: "Notater 2026-09-23: Hjemmelekse"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+For problem 1-6, bruk data fra Boston maraton, år 2012 [boston2012](https://dhammarstrom.github.io/quant-methods/data-out/boston2012.csv). Hvis du bruker R så kan koden under brukes for å filtrere data og lage variabelen `speed`, som tilsvarer hastighet (km/tim).
+
+```{r}
+#| echo: true
+#| eval: false
+
+library(tidyverse)
+library(exscidata)
+
+
+
+dat <- exscidata::boston |> 
+      filter(year == 2012) |> 
+      mutate(speed = 42 / (seconds / 60 / 60 ))
+ 
+
+```
+
+1.  Hva er gjennomsnittlig hastighet i modellen under når vi setter alder til 45?
+
+$$\begin{align}
+y_i &\sim \operatorname{Normal}(\mu_i, \sigma) \\
+\mu_i &= \beta_0 + \beta_1 \times \text{age}_i + \beta_2 \times \text{age}_i^2
+\end{align}$$
+
+```{r}
+
+# Vi kan simulere en modell og se hvordan parameter b1 og b2 påvirker 
+# 
+b0 <- 9.45
+b1 <- 0.079579019
+b2 <- -0.001443157
+
+age <- seq(from = 18, to = 85, by = 1)
+age2 <- age^2
+
+data.frame(age, age2) |> 
+  mutate(y = b0 + b1 * age + b2 * age2) |> 
+  ggplot(aes(age, y)) + 
+  geom_line()
+  
+
+# Hva er gjennomsnitt hos de som er 45 år?
+dat |> 
+  filter(age == 45) |> 
+  summarise(gjennomsnitt = mean(speed)) |> 
+  print()
+
+
+
+# Neste steg er å lage en modell med dataene
+dat2 <- dat |> 
+  mutate(age2 = age^2) |> 
+  select(speed, age, age2, gender) |> 
+  print()
+
+dat2 |> 
+  ggplot(aes(age, speed)) + geom_point(alpha = 0.1)
+
+
+
+# Lag modellen 
+
+m <- lm(speed ~ age + age2, 
+        data = dat2)
+
+
+# Predikere for alder 45
+b0 <- coef(m)[1]
+b1 <- coef(m)[2]
+b2 <- coef(m)[3]
+
+age <- 45
+age2 <- age^2 
+
+y_pred <- b0 + b1 * age + b2 * age2
+
+
+# Predikere med predict()
+
+predict(m, newdata = data.frame(age = c(45,50), age2 = c(45^2, 50^2)))
+
+
+
+
+
+
+```
+
+2.  Legg til kjønn (gender) i modellen (uten interaksjonseffekt). Hva er forskjellen i hastighet mellom menn og kvinner?
+
+$$\begin{align}
+y_i &\sim \operatorname{Normal}(\mu_i, \sigma) \\
+\mu_i &= \beta_0 + \beta_1 \times \text{age}_i + \beta_2 \times \text{age}_i^2 + \beta_3 \times \text{sex}_i
+\end{align}$$
+
+```{r}
+
+
+
+m2 <- lm(speed ~ age + age2 + gender, 
+         data = dat2)
+
+
+b0 <- coef(m2)[1]
+b1 <- coef(m2)[2]
+b2 <- coef(m2)[3]
+b3 <- coef(m2)[4]
+
+
+data.frame(age = seq(from = 18, to = 85, by = 1)) |> 
+  mutate(age2 = age^2) |> 
+  expand_grid(gender = c(0,1)) |> 
+  mutate(speed = b0 + b1 * age + b2 * age2 + b3 * gender) |> 
+  
+  ggplot(aes(x = age, y = speed, group = as.factor(gender), 
+             color = as.factor(gender))) + 
+  geom_line()
+  
+  
+
+
+
+
+```
+
+2.  Beskriv modellen over med matematisk notasjon, på samme måte som i Model 1.
+
+3.  Bygg om modellen slik at den tillater interaksjon mellom kjønn og alder (age og age\^2). Hva er forskjelleni hastighet mellom menn og kvinner når alderen er 18, 40, 60 og 85?
+
+```{r}
+
+
+m3 <- lm(speed ~ (age + age2) * gender, 
+         data = dat2)
+
+
+newdata <- data.frame(age = c(18, 40, 60, 85)) |> 
+  mutate(age2 = age^2) |> 
+  expand_grid(gender = c("F", "M")) |> 
+  print()
+
+
+newdata$pred <- predict(m3, newdata = newdata)
+
+
+
+data.frame(age = seq(from = 18, to = 85, by = 1)) |> 
+  mutate(age2 = age^2) |> 
+  expand_grid(gender = c(0,1)) |> 
+  mutate(speed = b0 + b1 * age + b2 * age2 + b3 * gender, 
+         gender = if_else(gender == 0, "F", "M")) |> 
+  
+  ggplot(aes(x = age, y = speed, group = as.factor(gender), 
+             color = as.factor(gender))) + 
+  geom_line() + 
+  
+  geom_point(data = newdata, 
+             aes(age, pred, color = gender), 
+             size = 3)
+  
+  
+
+
+
+
+
+```
+
+2.  Beskriv modellen i matematisk notasjon.
+
+3.  Lag en residualplot for modellen din. Sett predikerte verdier på x-aksen og residualene på y-aksel. Hva forteller figurene deg om antagelsene i modellen?
+
+For problem 7-12, bruk data på fotballskader [injury](https://dhammarstrom.github.io/quant-methods/data-out/injury.csv). Hvis du bruker R så finner du datasettet i `exscidata::injury`. Utfallsvariabelen er `Injury_Next_Season`.
+
+7.  Hva er log-odds ratio mellom de som gjennomfører oppvarming (`Warmup_Routine_Adherence == 1`) sammenlignet med de som ikke gjør det (`Warmup_Routine_Adherence == 0`). Bruk modellen beskrevet under.
+
+$$\begin{align}
+y_i &\sim \operatorname{Binomial}(1, p_i) \\
+\operatorname{log}\left(\frac{p_i}{1-p_i} \right) &= \beta_0 + \beta_1 \times \text{W}_i \\
+W&: \text{Warmup Routine Adherence}
+\end{align}$$ 8. Hva er odds ratioen for den samme sammenligningen?
+
+9.  Hva er oddsen for skade hos de som gjennomfør oppvarming (`Warmup_Routine_Adherence == 1`) og hos de som ikke gjør det (`Warmup_Routine_Adherence == 0`)?
+
+10. Legg til `Hamstring_Flexibility` som uavhengig variabel i modellen og beskriv den med matematisk notasjon.
+
+11. Hva er odds for skade hos en fotballspiller med hamstring bevegelseskår på 80?
+
+12. Bruk den samme modellen, hva er odds-ratioen for skade mellom en spiller med hamstring bevegelseskår på 87 sammenlignet med bevegelseskår på 73?
