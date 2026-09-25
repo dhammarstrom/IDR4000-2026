@@ -12,13 +12,15 @@ For problem 1-6, bruk data fra Boston maraton, år 2012 [boston2012](https://dha
 #| echo: true
 #| eval: false
 
+# Laste inn pakker
 library(tidyverse)
 library(exscidata)
 
 
-
+# Forbered dataene
 dat <- exscidata::boston |> 
       filter(year == 2012) |> 
+  # Konvertere til km / time
       mutate(speed = 42 / (seconds / 60 / 60 ))
  
 
@@ -35,9 +37,9 @@ y_i &\sim \operatorname{Normal}(\mu_i, \sigma) \\
 
 # Vi kan simulere en modell og se hvordan parameter b1 og b2 påvirker 
 # 
-b0 <- 9.45
-b1 <- 0.079579019
-b2 <- -0.001443157
+b0 <- 10
+b1 <- 0.1
+b2 <- -0.002
 
 age <- seq(from = 18, to = 85, by = 1)
 age2 <- age^2
@@ -48,15 +50,28 @@ data.frame(age, age2) |>
   geom_line()
   
 
+```
+
+"Simuleringen" over gir oss mulighet til å forstå hva verdier på parameterer gir i en hypotetisk prediksjon.
+
+Vi kan besvara spørmålet ved å beregne gjennomsnitt i den observerte dataene.
+
+
+```{r}
 # Hva er gjennomsnitt hos de som er 45 år?
 dat |> 
   filter(age == 45) |> 
   summarise(gjennomsnitt = mean(speed)) |> 
   print()
+```
 
 
+Det å bruke alle dataene gir mer informasjon, neste steg er å lage en regresjonsmodell.
 
+
+```{r}
 # Neste steg er å lage en modell med dataene
+# Forbered et mindre dataset
 dat2 <- dat |> 
   mutate(age2 = age^2) |> 
   select(speed, age, age2, gender) |> 
@@ -64,9 +79,13 @@ dat2 <- dat |>
 
 dat2 |> 
   ggplot(aes(age, speed)) + geom_point(alpha = 0.1)
+```
 
 
+Figuren indikerer en negativ sammenheng mellom variabler. 
 
+
+```{r}
 # Lag modellen 
 
 m <- lm(speed ~ age + age2, 
@@ -84,8 +103,7 @@ age2 <- age^2
 y_pred <- b0 + b1 * age + b2 * age2
 
 
-# Predikere med predict()
-
+# Predikere med predict(), her bruker vi to aldersnivåer
 predict(m, newdata = data.frame(age = c(45,50), age2 = c(45^2, 50^2)))
 
 
@@ -97,28 +115,35 @@ predict(m, newdata = data.frame(age = c(45,50), age2 = c(45^2, 50^2)))
 
 2.  Legg til kjønn (gender) i modellen (uten interaksjonseffekt). Hva er forskjellen i hastighet mellom menn og kvinner?
 
+Vi bygger ut modellen till:
+
 $$\begin{align}
 y_i &\sim \operatorname{Normal}(\mu_i, \sigma) \\
 \mu_i &= \beta_0 + \beta_1 \times \text{age}_i + \beta_2 \times \text{age}_i^2 + \beta_3 \times \text{sex}_i
 \end{align}$$
 
+
+
+
 ```{r}
 
 
-
+# Vi setter opp modellen
 m2 <- lm(speed ~ age + age2 + gender, 
          data = dat2)
 
-
+# Vi henter ut estimater for parameterer
 b0 <- coef(m2)[1]
 b1 <- coef(m2)[2]
 b2 <- coef(m2)[3]
 b3 <- coef(m2)[4]
 
-
+# Her lager vi en data frame med prediktorverdier
 data.frame(age = seq(from = 18, to = 85, by = 1)) |> 
   mutate(age2 = age^2) |> 
+  # Expand grid multipliserer hver rad med verdier i den nye variabelen gender
   expand_grid(gender = c(0,1)) |> 
+  # Predikere ved hjelp av formelen for modellen
   mutate(speed = b0 + b1 * age + b2 * age2 + b3 * gender) |> 
   
   ggplot(aes(x = age, y = speed, group = as.factor(gender), 
@@ -126,33 +151,32 @@ data.frame(age = seq(from = 18, to = 85, by = 1)) |>
   geom_line()
   
   
-
-
-
-
 ```
 
 2.  Beskriv modellen over med matematisk notasjon, på samme måte som i Model 1.
 
+Se over
+
 3.  Bygg om modellen slik at den tillater interaksjon mellom kjønn og alder (age og age\^2). Hva er forskjelleni hastighet mellom menn og kvinner når alderen er 18, 40, 60 og 85?
 
+En interaksjon er en effekt hvor en utfallet for en variabel påvirkes av en annen variabel. I modellen under legger vi til f.eks. $\beta_4 \times (\text{age}_i \times \text{sex}_i)$ hvor $(\text{age}_i \times \text{sex}_i)$ kan leses som en ny variabel som er $\text{age}$ når sex = 1, i annet fall 0.
+
 ```{r}
-
-
+# Vi setter opp modellen
 m3 <- lm(speed ~ (age + age2) * gender, 
          data = dat2)
 
-
+# Vi lager en ny data frame for å predikere
 newdata <- data.frame(age = c(18, 40, 60, 85)) |> 
   mutate(age2 = age^2) |> 
   expand_grid(gender = c("F", "M")) |> 
   print()
 
-
+# Lagre prediksjoner
 newdata$pred <- predict(m3, newdata = newdata)
 
 
-
+# Vi kombinerer prediksjoner fra modell 2 og 3
 data.frame(age = seq(from = 18, to = 85, by = 1)) |> 
   mutate(age2 = age^2) |> 
   expand_grid(gender = c(0,1)) |> 
@@ -166,33 +190,232 @@ data.frame(age = seq(from = 18, to = 85, by = 1)) |>
   geom_point(data = newdata, 
              aes(age, pred, color = gender), 
              size = 3)
-  
-  
+```
 
 
+```{r}
+# Prediksjon over hele aldersspannet
+grid <- data.frame(age = seq(from = 18, to = 85, by = 1)) |> 
+  mutate(age2 = age^2) |> 
+  expand_grid(gender = c("F", "M")) |> 
+  print()
 
+
+grid$pred <- predict(m3, newdata = grid)
+
+
+grid |> 
+  ggplot(aes(age, pred, 
+             group = gender, 
+             color = gender)) + 
+  geom_line()
 
 
 ```
 
 2.  Beskriv modellen i matematisk notasjon.
 
-3.  Lag en residualplot for modellen din. Sett predikerte verdier på x-aksen og residualene på y-aksel. Hva forteller figurene deg om antagelsene i modellen?
+$$\begin{align}
+y_i &\sim \operatorname{Normal}(\mu_i, \sigma) \\
+\mu_i &= \beta_0 + \beta_1 \times \text{age}_i +\beta_2 \times \text{age}_i^2 + \\
+& \beta_3 \times \text{sex}_i + \\
+&\beta_4 \times (\text{age}_i \times \text{sex}_i) + \\
+&\beta_5 \times (\text{age}^2_i \times \text{sex}_i)  
+\end{align}$$
+
+2.  Lag en residualplot for modellen din. Sett predikerte verdier på x-aksen og residualene på y-aksel. Hva forteller figurene deg om antagelsene i modellen?
+
+En residualplot kan fortelle noe om hvordan modellen feilestimerer observasjoner, en residual er 
+
+$$
+\hat{y}_i - y_i
+$$
+Dette kan leses som differensen mellom estimerte ($\hat{y}_i$) og observerte ($y_i$) verdier. Vi beregner en residual for hver observasjon. Hvis residualene ikke spreder likt over predikerte verdier har vi heteroskedastisitet! Vi antar med modell lik varians (homoskedastisitet; en estimert verdi på &sigma;, $y_i \sim \text{Normal}(\mu_i, \color{red}{\sigma})$).
+
+```{r}
+
+
+dat2$pred <- predict(m3)
+dat2$resid <- resid(m3) 
+
+
+dat2 |> 
+  ggplot(aes(pred, resid)) + geom_point(alpha = 0.1) + 
+  geom_hline(yintercept = 0, lty = 2) + 
+  labs(x = "Fitted", 
+       y = "Residual")
+
+# En annen måte å lage residual plots:
+# plot(m3)
+
+```
 
 For problem 7-12, bruk data på fotballskader [injury](https://dhammarstrom.github.io/quant-methods/data-out/injury.csv). Hvis du bruker R så finner du datasettet i `exscidata::injury`. Utfallsvariabelen er `Injury_Next_Season`.
 
 7.  Hva er log-odds ratio mellom de som gjennomfører oppvarming (`Warmup_Routine_Adherence == 1`) sammenlignet med de som ikke gjør det (`Warmup_Routine_Adherence == 0`). Bruk modellen beskrevet under.
 
+
+Vi starter med å se på dataene:
+
+```{r}
+
+dat <- exscidata::injury
+
+dat |> 
+  summarise(.by = Injury_Next_Season, 
+            n = n()) |> 
+
+  ggplot(aes(as.factor(Injury_Next_Season), n)) + geom_bar(stat = "identity")
+
+
+
+# Se også
+# ?exscidata::injury
+
+```
+
+Datasettet er balansert hav gjelder vår utfallsvariabel.
+
+Modellen:
+
+
 $$\begin{align}
 y_i &\sim \operatorname{Binomial}(1, p_i) \\
 \operatorname{log}\left(\frac{p_i}{1-p_i} \right) &= \beta_0 + \beta_1 \times \text{W}_i \\
 W&: \text{Warmup Routine Adherence}
-\end{align}$$ 8. Hva er odds ratioen for den samme sammenligningen?
+\end{align}$$ 
+
+Log-odds ratioen er hva modellen estimerer som $\beta_1$
+
+```{r}
+
+
+m4 <- glm(Injury_Next_Season ~ Warmup_Routine_Adherence, 
+          family = binomial(link = "logit"),
+          data = dat ) 
+
+coef(m4)[2]
+
+```
+
+
+8. Hva er odds ratioen for den samme sammenligningen?
+
+For å beregne odds-ratioen må vi komme vekk fra log-skalaen:
+
+$\frac{p_i}{1-p_i} = \operatorname{exp} \left( \operatorname{log}\left(\frac{p_i}{1-p_i} \right)\right)$
+
+
+```{r}
+
+# Ta ut odd-ratioen for forskjell mellom
+# de som varmer opp sammenlignet med de som 
+# ikke varmer opp
+exp(coef(m4)[2])
+
+
+```
 
 9.  Hva er oddsen for skade hos de som gjennomfør oppvarming (`Warmup_Routine_Adherence == 1`) og hos de som ikke gjør det (`Warmup_Routine_Adherence == 0`)?
 
-10. Legg til `Hamstring_Flexibility` som uavhengig variabel i modellen og beskriv den med matematisk notasjon.
 
-11. Hva er odds for skade hos en fotballspiller med hamstring bevegelseskår på 80?
+Her kan vi predikerer fra den linjære delen av modellen, akkurat slik som med en vanlig linejær modell.
 
-12. Bruk den samme modellen, hva er odds-ratioen for skade mellom en spiller med hamstring bevegelseskår på 87 sammenlignet med bevegelseskår på 73?
+```{r}
+
+# Odds for skade hos de som varmer opp
+odds_varm <- exp(coef(m4)[1] + coef(m4)[2])
+odds_ikkevarm <- exp(coef(m4)[1])
+
+# Odds ratio 
+odds_varm / odds_ikkevarm
+
+# Det samme som 
+exp(coef(m4)[2])
+
+
+```
+
+9.  Legg til `Hamstring_Flexibility` som uavhengig variabel i modellen og beskriv den med matematisk notasjon.
+
+$$\begin{align}
+y_i &\sim \operatorname{Binomial}(1, p_i) \\
+\operatorname{log}\left(\frac{p_i}{1-p_i} \right) &= \beta_0 + \beta_1 \times \text{W}_i + \beta_2 \times \text{H}_i
+\end{align}$$
+
+
+Vi kan forenkle arbeidet litt hved å bruke andre navn på variablene:
+
+```{r}
+dat$H <- dat$Hamstring_Flexibility - mean(dat$Hamstring_Flexibility)
+dat$Injury <- dat$Injury_Next_Season
+dat$W <- dat$Warmup_Routine_Adherence
+```
+
+
+Vi setter opp modellen
+
+```{r}
+m5 <- glm(Injury ~ W + H, 
+          data = dat, 
+          family = binomial(link = "logit"))
+
+
+summary(m5)
+```
+
+
+Det er viktig å modellere data med en modell som fanger opp karakteristikker til dataene. Her under et exempel på hvordan en linjær model med som bruker normalfodelingen ikke fanger dataene.
+
+```{r}
+# En lm på den samme dataene
+mx <- lm(Injury ~ W + H, 
+         data = dat)
+
+coef(mx)[1]
+
+
+
+grid <- data.frame(H = seq(from = -20, to = 20, by = 1)) |> 
+  expand_grid(W = c(0, 1)) |> 
+  print()
+
+
+grid$response <- predict(m5, newdata = grid, type = "response")
+
+
+
+dat |> 
+  ggplot(aes(H, Injury,
+             color = as.factor(W))) + 
+  geom_abline(intercept = 
+                coef(mx)[1], 
+              slope = 
+                coef(mx)[3]) +
+  
+  geom_line(data = grid, 
+            aes(H, response, group = W)) +
+  
+  geom_point()
+
+
+
+```
+
+9.  Hva er odds for skade hos en fotballspiller med hamstring bevegelseskår på 80?
+
+
+
+
+```{r}
+
+
+
+
+
+coef(m5)
+
+
+```
+
+9.  Bruk den samme modellen, hva er odds-ratioen for skade mellom en spiller med hamstring bevegelseskår på 87 sammenlignet med bevegelseskår på 73?
