@@ -1,0 +1,128 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+# Simulering av "confounder"
+
+```{r}
+
+library(tidyverse)
+
+n <- 1000
+economy <- rnorm(n)
+
+physical_activity <- economy + rnorm(n)
+blood_pressure <- -economy + rnorm(n)
+
+
+dat <- data.frame(economy, physical_activity, 
+                  blood_pressure)
+
+
+
+dat |> 
+  ggplot(aes(x = physical_activity, 
+             y = blood_pressure)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+
+
+
+# Statistisk kontroll for økonomi
+
+m0 <- lm(blood_pressure ~ physical_activity, 
+         data = dat)
+
+
+m1 <- lm(blood_pressure ~ physical_activity + 
+           economy, 
+         data = dat)
+
+
+summary(m0)
+
+summary(m1)
+
+
+# En del av effekten skylles konfunderende variabel
+
+n <- 1000
+economy <- rnorm(n)
+
+physical_activity <- economy + rnorm(n)
+blood_pressure <- -economy -physical_activity +  rnorm(n)
+
+
+dat <- data.frame(economy, physical_activity, 
+                  blood_pressure)
+
+
+
+dat |> 
+  ggplot(aes(x = physical_activity, 
+             y = blood_pressure)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+
+
+
+# Statistisk kontroll for økonomi
+
+m0 <- lm(blood_pressure ~ physical_activity, 
+         data = dat)
+
+
+m1 <- lm(blood_pressure ~ physical_activity + 
+           economy, 
+         data = dat)
+
+
+summary(m0)
+
+summary(m1)
+
+
+
+```
+
+## Collider bias - Seleksjonsbias
+
+```{r}
+
+n <- 1000
+
+VO2max <- rnorm(n)
+economy <- rnorm(n)
+
+
+dat <- data.frame(VO2max, economy) |> 
+  mutate(performance = VO2max + economy, 
+         selected = if_else(performance > 2.5, 
+                            "selected",
+                            "not_selected")) |> 
+  print()
+
+
+
+
+
+dat |> 
+  ggplot(aes(VO2max, economy, 
+             color = selected)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") + 
+  geom_smooth(aes(color = NULL), 
+              method = "lm")
+
+
+
+
+
+
+
+
+```

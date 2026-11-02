@@ -1,0 +1,149 @@
+---
+title: "Notater 2026-09-23: Hjemmelekse"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+For problem 1-5 bruk datasettet `strengthvolume`.
+
+1.  Bruk følgende data:
+    - `exercise == "isok.60"` (exercise skal være "isok.60")
+    - `time %in% c("pre", "post")` (tidspunkt "pre" og "post")
+    - `include == "incl"` (bare deltakere som ble inkludert i analysene)
+
+I R kan det være lurt å spesifisere rekkefølge i variablene:
+
+```{r}
+#| echo: true
+#| eval: false
+
+library(exscidata)
+library(tidyverse)
+library(lme4)
+
+dat1 <- strengthvolume |> 
+       filter(time %in% c("pre", "post"), 
+              exercise == "isok.60", 
+              include == "incl") |> 
+       mutate(time = factor(time, levels = c("pre", "post")), 
+              sets = factor(sets, levels = c("single", "multiple"))) 
+
+
+
+
+```
+
+Lag en mixed model etter denne beskrivelsen:
+
+$$\begin{align}
+y_{ij} &\sim \operatorname{Normal}(\mu_{ij}, \sigma) \\
+\mu_{ij} &= \beta_0 + \beta_1\text{Time}_i + \beta_2\text{Sets}_i + \beta_3(\text{Time}_i \times \text{Sets}_i) + b_{0[j]}
+\end{align}$$
+
+Hvor *i* indekserer rad i datasettet (*i* for 1, 2, 3, ... k obsevasjoner) og *j* indekserer deltakere (*j* for 1 ,2 , 3, ... n deltakere).
+
+> Spørsmål:
+>
+> a.  Hva er din konklusjon angående effekten av treningsvolum (*Sets*) over tid?
+> b.  Hva er betydelsen av $b_{0[j]}$ i modellen?
+
+```{r}
+
+# En modell for gjennomsnitt uten random/varying effect
+
+m0 <- lm(load ~ time * sets, 
+        data = dat1)
+
+
+m1 <- lmer(load ~ time*sets + (1|participant), 
+           data = dat1)
+
+
+summary(m0)
+summary(m1)
+
+
+
+```
+
+2.  Bruk den samme dataen men omstrukturere den. Først, lag en en ny variable for `change = post - pre`. Datasettet kan nå se ut slik (de første 6 radene):
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+
+library(exscidata)
+library(tidyverse)
+library(gt)
+
+strengthvolume |> 
+       filter(time %in% c("pre", "post"), 
+              exercise == "isok.60", 
+              include == "incl") |> 
+       mutate(time = factor(time, levels = c("pre", "post")), 
+              sets = factor(sets, levels = c("single", "multiple")))  |> 
+      select(participant, time, sets, load) |> 
+      pivot_wider(names_from = time, 
+                  values_from = load) |> 
+      mutate(change = post - pre) |> 
+      head() |> 
+      gt()
+
+
+```
+
+Bruk `change` vaiabelen videre. Beregne en differens mellom forandring over tid i hver treningsvolum for hvert deltaker. Det siste datasettet bør se ut slik:
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+library(exscidata)
+library(tidyverse)
+library(gt)
+
+dat <- strengthvolume |> 
+       filter(time %in% c("pre", "post"), 
+              exercise == "isok.60", 
+              include == "incl") |> 
+       mutate(time = factor(time, levels = c("pre", "post")), 
+              sets = factor(sets, levels = c("single", "multiple")))  |> 
+      select(participant, time, sets, load) |> 
+      pivot_wider(names_from = time, 
+                  values_from = load) |> 
+      mutate(change = post - pre) |> 
+      dplyr::select(-post, -pre) |> 
+      pivot_wider(names_from = sets, 
+                  values_from = change) |> 
+      mutate(diff = multiple - single)
+
+dat |> 
+      head() |> 
+      gt() 
+
+
+```
+
+Lag en modell som beskriver:
+
+$$\begin{align}
+y &\sim \operatorname{Normal}(\mu, \sigma) \\
+\mu &= \beta_0
+\end{align}$$
+
+```{r}
+
+
+m2 <- lm(diff ~ 1, 
+         data = dat)
+
+summary(m2)
+
+
+
+```
