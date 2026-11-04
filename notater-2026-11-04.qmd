@@ -1,0 +1,95 @@
+---
+title: "Notater 2026-11-02"
+format: html
+editor: visual
+---
+
+## Simulering av sjakkspillere
+
+```{r}
+library(tidyverse)
+
+pop <- rnorm(100000, 100, 15)
+
+sjakk <- rnorm(100000, 115, 15)
+
+results <- data.frame(pval10 = rep(NA, 1000), 
+                      pval20 = rep(NA, 1000), 
+                      pval40 = rep(NA, 1000), 
+                      pval80 = rep(NA, 1000))
+for(i in 1:1000) {
+  
+  # Utvalgsstørrelser 10, 50, 100, 200
+  n <- c(10, 20, 40, 80)
+
+  pop10 <- sample(pop, n[1])
+  sjakk10 <- sample(sjakk, n[1])
+  
+  pop50 <- sample(pop, n[2])
+  sjakk50 <- sample(sjakk, n[2])
+  
+  pop100 <- sample(pop, n[3])
+  sjakk100 <- sample(sjakk, n[3])
+  
+  pop200 <- sample(pop, n[4])
+  sjakk200 <- sample(sjakk, n[4])
+  
+  
+  ttestresult10 <- t.test(pop10, sjakk10)
+  ttestresult50 <- t.test(pop50, sjakk50)
+  ttestresult100 <- t.test(pop100, sjakk100)
+  ttestresult200 <- t.test(pop200, sjakk200)
+  
+  results[i,1] <- ttestresult10$p.value
+  results[i,2] <- ttestresult50$p.value
+  results[i,3] <- ttestresult100$p.value
+  results[i,4] <- ttestresult200$p.value
+  
+}
+
+results |> 
+  pivot_longer(everything()) |>
+  mutate( sample_size = as.numeric(
+    gsub("pval", "", name)),
+    sig = if_else(value < 0.05, 1, 0)) |> 
+  summarise(.by = sample_size, 
+            frac_sig = sum(sig)/n()) |> 
+  print()
+  
+  
+ 
+
+
+
+
+```
+
+## Simulering av p-verdier
+
+```{r}
+
+library(tidyverse)
+
+results <- data.frame(pval = rep(NA, 10000))
+for(i in 1:10000) {
+  
+  A <- rnorm(20, 0.5, 0.15)
+  B <- rnorm(20, 0.55, 0.15)
+  
+  test <- t.test(A, B, paired = FALSE)
+  
+  results[i, 1] <- test$p.value
+  
+  
+}
+
+
+results |> 
+  ggplot(aes(pval)) +  geom_histogram(boundary = 0) + 
+  geom_vline(xintercept = 0.05)
+
+
+
+
+
+```
